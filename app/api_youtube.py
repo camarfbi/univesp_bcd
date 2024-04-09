@@ -3,6 +3,8 @@ import json
 from datetime import datetime, timedelta
 from googleapiclient.discovery import build
 import psycopg2
+import sys
+sys.path.append("/usr/local/lib/python3.8/dist-packages")
 import schedule
 import time
 
@@ -35,6 +37,13 @@ def consultar_playlist():
 
         next_page_token = None
         total_videos_consultados = 0
+        videos_ids_bd = []
+
+        # Consultar todos os IDs de vídeos no banco de dados
+        cur.execute("SELECT name->>'en_US' FROM blog_post")
+        rows = cur.fetchall()
+        for row in rows:
+            videos_ids_bd.append(row[0])
 
         while True:
             # Faça a solicitação para obter os itens da playlist com o token da próxima página
@@ -44,9 +53,6 @@ def consultar_playlist():
                 maxResults=50,
                 pageToken=next_page_token
             ).execute()
-
-            # Inicialize a contagem de vídeos consultados nesta página
-            videos_consultados_pagina = 0
 
             # Processar os resultados desta página
             for item in res['items']:
@@ -72,8 +78,8 @@ def consultar_playlist():
                     # Insira os dados na tabela blog_post
                     name_json = json.dumps({"en_US": title, "pt_BR": title})
                     content_json = json.dumps({
-                        "en_US": f'<p class="o_default_snippet_text">{description}</p><iframe width="560" height="315" src="https://www.youtube.com/embed/{video_id}" frameborder="0" allowfullscreen></iframe>',
-                        "pt_BR": f'<p class="o_default_snippet_text">{description}</p><iframe width="560" height="315" src="https://www.youtube.com/embed/{video_id}" frameborder="0" allowfullscreen></iframe>'
+                        "en_US": f'<iframe width="720" height="405" src="https://www.youtube.com/embed/{video_id}" frameborder="0" allowfullscreen></iframe><p class="o_default_snippet_text">{description}</p>',
+                        "pt_BR": f'<iframe width="720" height="405" src="https://www.youtube.com/embed/{video_id}" frameborder="0" allowfullscreen></iframe><p class="o_default_snippet_text">{description}</p>'
                     })
                     cover_properties_json = json.dumps({"background-image": f"url({thumbnail_url})", "background_color_class": "o_cc3 o_cc", "background_color_style": "", "opacity": "0.2", "resize_class": "o_half_scr>"})
 
@@ -113,7 +119,7 @@ def consultar_playlist():
                         blog_post_id
                     ))
 
-                videos_consultados_pagina += 1
+                videos_ids_bd.remove(title)
                 total_videos_consultados += 1
 
             # Atualizar o token da próxima página
@@ -122,6 +128,11 @@ def consultar_playlist():
             # Se não houver mais páginas, interrompa o loop
             if not next_page_token:
                 break
+
+        # Remover os posts do blog correspondentes aos vídeos removidos da playlist
+        if videos_ids_bd:
+            for video_title in videos_ids_bd:
+                cur.execute("DELETE FROM blog_post WHERE name->>'en_US' = %s", (video_title,))
 
         # Registre a consulta no log
         cur.execute("INSERT INTO consulta_log (data, hora, videos_consultados) VALUES (%s, %s, %s)", (today, now.time(), total_videos_consultados))
@@ -136,10 +147,9 @@ def consultar_playlist():
         # Lidar com falhas na solicitação
         print("Ocorreu um erro ao obter os itens da playlist:", e)
 
-# Agendar a execução da função a cada 6 horas
-schedule.every(1).hours.do(consultar_playlist)
+# Agendamento para executar a consulta a cada 6 horas
+schedule.every(0.1).hours.do(consultar_playlist)
 
-# Loop para manter o script em execução
 while True:
     schedule.run_pending()
     time.sleep(1)
