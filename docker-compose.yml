@@ -1,0 +1,76 @@
+services:
+  odoo:
+    image: odoo:17.0
+    container_name: odoo
+    env_file: .env
+    depends_on:
+      - postgres
+    ports:
+      - "8069:8069"
+    volumes:
+      - "./docker/odoo/data:/var/lib/odoo"
+      - "./docker/odoo/config:/etc/odoo"
+      - "./docker/odoo/addons:/mnt/extra-addons"
+    restart: unless-stopped
+
+  app:
+    build:
+      context: ./app
+    container_name: apiapp
+    env_file: .env
+    depends_on:
+      - postgres
+    volumes:
+      - ./app:/app
+    command: python api_youtube.py
+#   restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    env_file: .env
+    volumes:
+      - "./docker/odoo/db:/var/lib/postgresql"
+#   user: root
+#   command: ["bash", "-c", "chown -R root:root /var/lib/postgresql/data/pgdata && su postgres -c 'initdb -D /var/lib/postgresql/data/pgdata'"]
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    env_file: .env
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+#  odoo_weekly_backup:
+#    image: busybox
+#    depends_on:
+#      - odoo
+#    volumes:
+#      - "./docker/odoo/data:/odoo_data"
+#      - "./backup:/backup"
+#    command: tar czf /backup/odoo_data_weekly_backup.tar.gz -C /odoo_data .
+#    restart: unless-stopped
+#    deploy:
+#      placement:
+#        constraints:
+#          - node.labels.backup_day == tuesday
+
+#  odoo_weekly_backup2:
+#    image: busybox
+#    depends_on:
+#      - odoo
+#    volumes:
+#      - "./docker/odoo/data:/odoo_data"
+#      - "./backup:/backup"
+#    command: tar czf /backup/odoo_data_weekly_backup.tar.gz -C /odoo_data .
+#    restart: unless-stopped
+#    deploy:
+#      placement:
+#        constraints:
+#          - node.labels.backup_day == saturday
+
+volumes:
+  data:
+  db:
