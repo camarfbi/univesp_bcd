@@ -1,3 +1,6 @@
+# version 1.0
+# Check playlist videos and add posts
+
 import os
 import json
 from datetime import datetime, timedelta
