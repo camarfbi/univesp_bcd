@@ -1,5 +1,7 @@
 # version 1.0
 # Check playlist videos and add posts
+# Record video_id and post_id in video_post_relation
+
 
 import os
 import json
@@ -50,9 +52,11 @@ try:
         # Processar os resultados desta página
         for item in res['items']:
             title = item['snippet']['title']
+            print("Título do vídeo:", title)  # Mensagem de debug para exibir o título do vídeo
             description = item['snippet']['description']
             tags = item['snippet'].get('tags', [])
             video_id = item['snippet']['resourceId']['videoId']  # Obtém o ID do vídeo
+            print("ID do vídeo:", video_id)  # Mensagem de debug para exibir o ID do vídeo
 
             # Verificar a disponibilidade da imagem de alta qualidade, se não existir, verificar a média
             if 'high' in item['snippet']['thumbnails']:
@@ -103,12 +107,23 @@ try:
                 # Recupere o ID do blog_post inserido
                 cur.execute("SELECT currval(pg_get_serial_sequence('blog_post', 'id'))")
                 blog_post_id = cur.fetchone()[0]
+                # print("ID do post inserido:", blog_post_id)  # Mensagem de debug para exibir o ID do post inserido
+
                 # Insira os dados na tabela blog_post_blog_tag_rel
                 cur.execute("""
                     INSERT INTO blog_post_blog_tag_rel (blog_tag_id, blog_post_id)
                     VALUES (%s, %s)
                 """, (
                     1,  # blog_tag_id (para simplificar, assumindo 1 como ID da playlist)
+                    blog_post_id
+                ))
+
+                # Insira o video_id na tabela video_post_relation
+                cur.execute("""
+                    INSERT INTO video_post_relation (video_id, post_id)
+                    VALUES (%s, %s)
+                """, (
+                    video_id,
                     blog_post_id
                 ))
 
@@ -132,3 +147,4 @@ try:
 except Exception as e:
     # Lidar com falhas na solicitação
     print("Ocorreu um erro ao obter os itens da playlist:", e)
+
