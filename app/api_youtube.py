@@ -1,8 +1,3 @@
-# version 1.0
-# Check playlist videos and add posts
-# Record video_id and post_id in video_post_relation
-
-
 import os
 import json
 from datetime import datetime, timedelta
@@ -19,6 +14,7 @@ PLAYLIST_ID = os.environ.get('PLAYLIST_ID')
 
 # Crie o cliente do YouTube API
 youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
+print("Cliente do YouTube API criado com sucesso.")  # Mensagem de debug para indicar que o cliente foi criado com sucesso
 
 # Defina a conexão com o banco de dados PostgreSQL
 conn = psycopg2.connect(
@@ -45,6 +41,21 @@ try:
             maxResults=50,
             pageToken=next_page_token
         ).execute()
+
+        # Verificar se a resposta indica um erro de limite de consulta
+        if 'error' in res:
+            error_message = res['error']['message']
+            if 'quota' in error_message.lower():
+                print("Limite de consulta à API do YouTube excedido. Aguarde antes de tentar novamente.")
+                break
+            else:
+                print("Erro ao fazer a solicitação à API do YouTube:", error_message)
+                break
+
+        # Debug: Imprimir a lista de vídeos da playlist
+        print("Lista de vídeos da playlist:")
+        for item in res['items']:
+            print(item['snippet']['title'])
 
         # Inicialize a contagem de vídeos consultados nesta página
         videos_consultados_pagina = 0
@@ -118,9 +129,9 @@ try:
                     blog_post_id
                 ))
 
-                # Insira o video_id na tabela video_post_relation
+                # Insira o video_id na tabela blog_video_post_relation
                 cur.execute("""
-                    INSERT INTO video_post_relation (video_id, post_id)
+                    INSERT INTO blog_video_post_relation (video_id, post_id)
                     VALUES (%s, %s)
                 """, (
                     video_id,
@@ -147,4 +158,3 @@ try:
 except Exception as e:
     # Lidar com falhas na solicitação
     print("Ocorreu um erro ao obter os itens da playlist:", e)
-
