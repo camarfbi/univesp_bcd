@@ -1,3 +1,7 @@
+# Version 1.01
+# Ckeck and ignore videos private or deleted.
+
+
 import os
 import json
 from datetime import datetime, timedelta
@@ -32,6 +36,7 @@ today = now.strftime('%Y-%m-%d %H:%M:%S')
 try:
     next_page_token = None
     total_videos_consultados = 0
+    lista_videos = []
 
     while True:
         # Faça a solicitação para obter os itens da playlist com o token da próxima página
@@ -63,6 +68,12 @@ try:
         # Processar os resultados desta página
         for item in res['items']:
             title = item['snippet']['title']
+            
+            # Verificar se o vídeo é privado ou foi excluído
+            if title.lower() in ["private video", "deleted video"]:
+                print(f"Ignorando vídeo com título: {title}")
+                continue
+
             print("Título do vídeo:", title)  # Mensagem de debug para exibir o título do vídeo
             description = item['snippet']['description']
             tags = item['snippet'].get('tags', [])
@@ -86,8 +97,8 @@ try:
                 # Insira os dados na tabela blog_post
                 name_json = json.dumps({"en_US": title, "pt_BR": title})
                 content_json = json.dumps({
-                    "en_US": f'<p class="o_default_snippet_text">{description}</p><iframe width="560" height="315" src="https://www.youtube.com/embed/{video_id}" frameborder="0" allowfullscreen></iframe>',
-                    "pt_BR": f'<p class="o_default_snippet_text">{description}</p><iframe width="560" height="315" src="https://www.youtube.com/embed/{video_id}" frameborder="0" allowfullscreen></iframe>'
+                    "en_US": f'<iframe width="720" height="405" src="https://www.youtube.com/embed/{video_id}" frameborder="0" allowfullscreen></iframe><p class="o_default_snippet_text">{description}</p>',
+                    "pt_BR": f'<iframe width="720" height="405" src="https://www.youtube.com/embed/{video_id}" frameborder="0" allowfullscreen></iframe><p class="o_default_snippet_text">{description}</p>'
                 })
                 cover_properties_json = json.dumps({"background-image": f"url({thumbnail_url})", "background_color_class": "o_cc3 o_cc", "background_color_style": "", "opacity": "0.2", "resize_class": "o_half_scr>"})
 
@@ -131,7 +142,7 @@ try:
 
                 # Insira o video_id na tabela blog_video_post_relation
                 cur.execute("""
-                    INSERT INTO blog_video_post_relation (video_id, post_id)
+                    INSERT INTO blog_video_post_relation (b_video_id, b_post_id)
                     VALUES (%s, %s)
                 """, (
                     video_id,
@@ -140,6 +151,7 @@ try:
 
             videos_consultados_pagina += 1
             total_videos_consultados += 1
+            lista_videos.append(video_id)
 
         # Atualizar o token da próxima página
         next_page_token = res.get('nextPageToken')
@@ -147,10 +159,13 @@ try:
         # Se não houver mais páginas, interrompa o loop
         if not next_page_token:
             break
+    
+        # Convertendo a lista para JSON
+        lista_videos_json = json.dumps(lista_videos)
 
-    # Registre a consulta no log
-    cur.execute("INSERT INTO consulta_log (data, hora, videos_consultados) VALUES (%s, %s, %s)", (today, now.time(), total_videos_consultados))
-
+        # Executando o comando INSERT INTO com a lista de vídeos em JSON
+        cur.execute("INSERT INTO blog_consulta_log (data, hora, qtd_videos, lista_videos) VALUES (%s, %s, %s, %s)", (today, now.time(), total_videos_consultados, lista_videos_json))
+        
     # Commit e feche a conexão
     conn.commit()
     conn.close()
