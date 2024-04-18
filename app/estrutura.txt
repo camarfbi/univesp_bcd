@@ -1,0 +1,23 @@
+project_folder/
+│
+├── database/
+│   ├── __init__.py
+│   └── db_connection.py
+│
+├── youtube/
+│   ├── __init__.py
+│   └── youtube_client.py
+│
+├── playlist/
+│   ├── __init__.py
+│   └── playlist_items.py
+│
+├── verification/
+│   ├── __init__.py
+│   └── video_verification.py
+│
+└── insertion/
+    ├── __init__.py
+    ├── blog_post_insertion.py
+    ├── blog_post_blog_tag_rel_insertion.py
+    └── blog_video_post_relation_insertion.py
