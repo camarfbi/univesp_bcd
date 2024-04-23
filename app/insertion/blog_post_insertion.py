@@ -14,7 +14,10 @@ def insert_blog_post(cur, video_data, today):
     if existing_video:
         #print(f"O vídeo {video_id} já foi postado.")
         return
-
+    #ignorado video com titulo "private video", "deleted video"
+    if title.lower() in ["private video", "deleted video"]:
+        #print(f"Ignorando vídeo com título: {title}")
+        return
     # Aqui você pode continuar com o resto do seu código, utilizando as variáveis video_id, title, description, tags, etc.
     # Certifique-se de fazer as substituições necessárias em todo o código para usar essas variáveis.
 

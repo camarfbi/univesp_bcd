@@ -6,6 +6,7 @@ project_folder/
 │
 ├── youtube/
 │   ├── __init__.py
+│   ├── load_video.py
 │   └── youtube_client.py
 │
 ├── playlist/
@@ -14,6 +15,7 @@ project_folder/
 │
 ├── verification/
 │   ├── __init__.py
+│   ├── post_verification.py
 │   └── video_verification.py
 │
 └── insertion/

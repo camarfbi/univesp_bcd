@@ -48,6 +48,8 @@ try:
     status_videos_published = []
     added_videos = []
     removed_videos = []
+    vr=[]
+    va=[]
 
     while True:
         #3 Faça a solicitação para obter os itens da playlist com o token da próxima página
@@ -97,9 +99,7 @@ try:
             
         
     print("Total de vídeos consultados: ", total_videos_consultados, "Removidos", videos_removidos, "Adicionados",videos_adiconados)
-    vr=[]
-    va=[]
-    
+
     #######loop para debug#####
     #for video_data in status_videos_removed:
     #    video_id = video_data['video_id']
@@ -137,8 +137,7 @@ try:
         else:
             # Se não encontrar o post correspondente, imprima uma mensagem indicando que não foi encontrado
             print(f"Não foi possível encontrar o post associado ao vídeo {video_id}.")
-        
-    # Commit e feche a conexão
+
     conn.commit()
     conn.close()
     
