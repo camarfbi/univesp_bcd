@@ -27,7 +27,7 @@ def verificar_e_inserir_log(cur, total_videos_consultados, lista_videos):
             print("Nenhum registro consultado anterior encontrado. Inserindo novo log...")
             # Executando o comando INSERT INTO com a lista de vídeos em JSON
             lista_videos_json = json.dumps(lista_videos)
-            print(lista_videos_json)
+            #print(lista_videos_json)
             cur.execute("INSERT INTO blog_consulta_log (data, hora, qtd_videos, lista_videos) VALUES (%s, %s, %s, %s)", (datetime.date.today(), datetime.datetime.now().time(), total_videos_consultados, lista_videos_json))
     else:
         # Se last_log for None, não há registros anteriores, então insira o novo log
