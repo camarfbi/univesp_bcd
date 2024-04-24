@@ -1,5 +1,5 @@
-# Version 1.1
-# Insert posts and posts disabled when video is removed from playlist
+# Version 1.11
+# V1.11 - Update posts disable to on
 
 
 import os
