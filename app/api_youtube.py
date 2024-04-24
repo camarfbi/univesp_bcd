@@ -103,7 +103,7 @@ try:
             break
             
         
-    print("Total de vídeos consultados: ", total_videos_consultados, "Removidos", videos_removidos, "Adicionados",videos_adiconados)
+    print("Total de vídeos consultados: ", total_videos_consultados, "Com título 'Removido': ", videos_removidos, "Ativos na playlist: ",videos_adiconados)
 
     #######loop para debug#####
     #for video_data in status_videos_removed:
@@ -121,8 +121,10 @@ try:
     # Obter os vídeos removidos da função verificar_e_inserir_log
     removed_videos_arg = removed_videos
     added_videos_arg = added_videos
-    print("Vídeos removidos:", removed_videos_arg)
-    print("Vídeos removidos:", added_videos_arg)
+    if removed_videos_arg:
+        print("Vídeos removidos:", removed_videos_arg)
+    if added_videos_arg:
+        print("Vídeos removidos:", added_videos_arg)
     
     status_videos_published_jason = json.dumps(status_videos_published)
     status_videos_removed_jason = json.dumps(status_videos_removed)

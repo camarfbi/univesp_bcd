@@ -15,6 +15,8 @@ def verificar_e_inserir_log(cur, total_videos_consultados, lista_videos):
         last_videos = last_log[0]  # Converte a lista de vídeos do último registro de volta para Python
         added_videos = list(set(lista_videos) - set(last_videos))  # Vídeos adicionados desde o último registro
         removed_videos = list(set(last_videos) - set(lista_videos))  # Vídeos removidos desde o último registro
+        if last_videos == lista_videos:
+            print("Nenhum registro alterado...")
         if added_videos or removed_videos:
             # Se houver alterações na playlist, execute a inserção do novo log
             print("Vídeos adicionados desde o último registro:", added_videos)
@@ -23,7 +25,7 @@ def verificar_e_inserir_log(cur, total_videos_consultados, lista_videos):
             # Executando o comando INSERT INTO com a lista de vídeos em JSON
             cur.execute("INSERT INTO blog_consulta_log (data, hora, qtd_videos, lista_videos) VALUES (%s, %s, %s, %s)", (datetime.date.today(), datetime.datetime.now().time(), total_videos_consultados, lista_videos_json))
         else:
-            # Se não houver registros anteriores, insira o novo log
+            # Se não houver alteração de registro.
             print("Nenhum registro consultado anterior encontrado. Inserindo novo log...")
             # Executando o comando INSERT INTO com a lista de vídeos em JSON
             lista_videos_json = json.dumps(lista_videos)
@@ -31,7 +33,7 @@ def verificar_e_inserir_log(cur, total_videos_consultados, lista_videos):
             cur.execute("INSERT INTO blog_consulta_log (data, hora, qtd_videos, lista_videos) VALUES (%s, %s, %s, %s)", (datetime.date.today(), datetime.datetime.now().time(), total_videos_consultados, lista_videos_json))
     else:
         # Se last_log for None, não há registros anteriores, então insira o novo log
-        print("Nenhum registro anterior encontrado. Inserindo novo log...")
+        print("Nenhum registro anterior encontrado.")
         # Executando o comando INSERT INTO com a lista de vídeos em JSON
         lista_videos_json = json.dumps(lista_videos)
         #print(lista_videos_json)
