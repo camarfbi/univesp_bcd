@@ -1,5 +1,5 @@
-# Version 1.11
-# V1.11 - Update posts disable to on
+# Version 1.2
+# V1.2 - Post activate
 
 
 import os
@@ -16,6 +16,8 @@ from verification.playlist_verification import verificar_e_inserir_log
 from youtube.load_video import load_video_data
 from insertion.blog_post_insertion import insert_blog_post
 from verification.post_verification import is_post_exist
+from verification.post_verification import get_posted_videos
+
 
 # Obtenha variáveis de ambiente
 POSTGRES_HOST = os.environ.get('POSTGRES_HOST')
@@ -117,6 +119,12 @@ try:
     
     #4 Consulta log da playlist
     added_videos, removed_videos = verificar_e_inserir_log(cur, total_videos_consultados, lista_videos)
+    
+    # Obtenha os vídeos que já têm post associado
+    posted_videos = get_posted_videos(cur)
+    
+    # Crie uma lista com os IDs dos vídeos adicionados que já têm post associado
+    added_videos_with_post = [video_id for video_id in added_videos if video_id in posted_videos]
 
     # Obter os vídeos removidos da função verificar_e_inserir_log
     removed_videos_arg = removed_videos
@@ -124,18 +132,21 @@ try:
     if removed_videos_arg:
         print("Vídeos removidos:", removed_videos_arg)
     if added_videos_arg:
-        print("Vídeos removidos:", added_videos_arg)
+        print("Vídeos Add:", added_videos_arg)
     
     status_videos_published_jason = json.dumps(status_videos_published)
     status_videos_removed_jason = json.dumps(status_videos_removed)
     
-    for video_id in added_videos_arg:
-        cur.execute("SELECT b_post_id FROM blog_video_post_relation WHERE b_video_id = %s", (video_id,))
-        post_id = cur.fetchone()
-        cur.execute("UPDATE blog_post SET active = True WHERE id = %s", (post_id[0],))
-        print(f"O post {post_id} associado ao vídeo {video_id} foi ativado.")
-    
-    
+    # Verifique se há vídeos adicionados com post associado
+    if added_videos_with_post:
+        for video_id in added_videos_with_post:
+            cur.execute("SELECT b_post_id FROM blog_video_post_relation WHERE b_video_id = %s", (video_id,))
+            post_id = cur.fetchone()
+            cur.execute("UPDATE blog_post SET active = True WHERE id = %s", (post_id[0],))
+            print(f"O post {post_id} associado ao vídeo {video_id} foi ativado.")
+    else:
+        print("Nenhum vídeo adicionado com post associado encontrado.")
+
     # 5 Insere ou desativa o post caso haja alteração na playlist
     for video_data in status_videos_published:
         video_id = video_data['video_id']
